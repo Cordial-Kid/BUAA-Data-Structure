@@ -11,11 +11,7 @@ typedef struct polygon {
 int cmp(const void* a,const void* b) {
     Polygon* p1 = (Polygon*)a;
     Polygon* p2 = (Polygon*)b;
-    if (p1->b != p2->b) {
-        return p2->b - p1->b; // 按照b降序排序
-    } else {
-        return p1->a - p2->a; // b相同则按照a升序排序   
-    }
+    return p2->b - p1->b; // 按照幂从大到小排序
 }
 
 // 动态扩容
