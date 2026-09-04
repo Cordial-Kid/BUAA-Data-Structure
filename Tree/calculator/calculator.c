@@ -1,13 +1,28 @@
-// Operator Stack and Postfix Expression Linked List
 #include<stdio.h>
+#include<stdlib.h>
 #include<ctype.h>
-#define MAX_SIZE 500
+
+#define MAX_SIZE 512
 
 typedef struct token {
     int is_num;
-    double num;
+    int num;
     char op;
 } Token;
+
+typedef struct treeNode {
+    Token token;
+    struct treeNode* left;
+    struct treeNode* right;
+} TreeNode;
+
+TreeNode* createNode(Token token) {
+    TreeNode* newNode = (TreeNode*)malloc(sizeof(TreeNode));
+    newNode->token = token;
+    newNode->left = NULL;
+    newNode->right = NULL;
+    return newNode;
+}
 
 // 返回运算符的优先级
 int priority(char op) {
@@ -35,7 +50,7 @@ int to_postfix(const char* expr, Token postfix[]) {
         } else if (expr[i] == '=') {
             break;
         } else if (isdigit((unsigned char) expr[i])) {
-            double num = 0;
+            int num = 0;
             while (isdigit((unsigned char) expr[i])) {
                 num = num * 10 + (expr[i] - '0');
                 i++;
@@ -72,36 +87,48 @@ int to_postfix(const char* expr, Token postfix[]) {
     return postfix_index;
 }
 
-double calculate(Token postfix[], int length) {
-    double cal_stack[MAX_SIZE];
-    int cal_top = -1;
-
+TreeNode* build_expression_tree(Token* postfix, int length) {
+    if (length == 0) {
+        return NULL;
+    }
+    int top = -1;
+    TreeNode* stack[length];
     for (int i = 0; i < length; i++) {
         if (postfix[i].is_num) {
-            cal_stack[++cal_top] = postfix[i].num;
+            stack[++top] = createNode(postfix[i]);
         } else {
-            double right  = cal_stack[cal_top--];
-            double left   = cal_stack[cal_top--];
-            switch (postfix[i].op) {
-                case '+':
-                    cal_stack[++cal_top] = left + right;
-                    break;
-                case '-':
-                    cal_stack[++cal_top] = left - right;
-                    break;
-                case '*':
-                    cal_stack[++cal_top] = left * right;
-                    break;
-                case '/':
-                    cal_stack[++cal_top] = left / right;
-                    break;
-                default:
-                    printf("Unknown operator: %c\n", postfix[i].op);
-                    return 0;
-            }
+            TreeNode* right = stack[top--];
+            TreeNode* left = stack[top--];
+            TreeNode* newNode = createNode(postfix[i]);
+            newNode->left = left;
+            newNode->right = right;
+            stack[++top] = newNode;
         }
     }
-    return cal_stack[cal_top];
+    return stack[top];
+}
+
+int calculate_expression_tree(TreeNode* root) {
+    if (root == NULL) {
+        return 0;
+    }
+    if (root->token.is_num) {
+        return root->token.num;
+    }
+    int left_val = calculate_expression_tree(root->left);
+    int right_val = calculate_expression_tree(root->right);
+    switch (root->token.op) {
+        case '+':
+            return left_val + right_val;
+        case '-':
+            return left_val - right_val;
+        case '*':
+            return left_val * right_val;
+        case '/':
+            return left_val / right_val;
+        default:
+            return 0;
+    }
 }
 
 int main() {
@@ -109,7 +136,8 @@ int main() {
     fgets(expr, MAX_SIZE, stdin);
     Token postfix[MAX_SIZE];
     int length = to_postfix(expr, postfix);
-    double result = calculate(postfix, length);
-    printf("%.2f\n", result);
+    TreeNode* root = build_expression_tree(postfix, length);
+    int result = calculate_expression_tree(root);
+    printf("%d\n", result);
     return 0;
 }

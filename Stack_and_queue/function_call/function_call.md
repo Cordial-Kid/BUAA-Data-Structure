@@ -48,7 +48,6 @@
 0
 0
 0
-0
 8 findC
 8 area
 8 mysin
